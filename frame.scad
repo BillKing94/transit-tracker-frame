@@ -43,12 +43,12 @@ module mounting_holes() {
             translate(displayOffset) {
                 for(pos = screwPositions) {
                     translate([pos.x, pos.y, -epsilon])
-                    cylinder(h=wallThickness + 2*epsilon, r=screwHoleRadius);
+                    cylinder(h=wallThickness + 2*epsilon, r=screwHoleRadius, $fn=10);
                 }
                 
                 for(pos = postPositions) {
                     translate([pos.x, pos.y, -epsilon])
-                    cylinder(h=wallThickness + 2*epsilon, r=postHoleRadius);
+                    cylinder(h=wallThickness + 2*epsilon, r=postHoleRadius, $fn=10);
                 }
             }
         }
