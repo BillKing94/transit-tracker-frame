@@ -1,29 +1,53 @@
+// Thickness of all thin walls.
 wallThickness = 2;
+
+// Dimensions of one display module.
 displayDims = [160, 80, 14.6];
-bevelWidth = 17;
-displayMountWidth = 12.5;
-bevelRadius = 5;
+
+// Display module layout.
 displayLayout=[2,1];
+
+// Width of the bevel around the displays.
+bevelWidth = 17;
+
+// Width of the face around the interior which the display mounts to.
+displayMountWidth = 12.5;
+
+// Radius of the exterior bevel.
+bevelRadius = 5;
+
+// Depth of the electronics compartment.
 circuitDepth = 12;
+
+// Dimensions of the power/button cutout on the side of the unit.
 portCutoutDims = [46,7];
 
+// Radius for screw holes.
 screwHoleRadius = 2.1;
+
+// Positions of screw holes for each display, relative to the display's bottom-left corner.
 screwPositions = [
     [17.5, 7.5],
-    [67.5, 7.5],
+    [92.5, 7.5],
     [142.5, 7.5],
     [17.5, 72.5],
-    [92.5, 72.5],
+    [67.5, 72.5],
     [142.5, 72.5],
 ];
 
+// Radius for post holes.
 postHoleRadius = 2;
+
+// Positions of post holes for each display, relative to the display's bottom-left corner.
 postPositions = [
-    [152.5, 55.5],
-    [7.5, 24.5]
+    [152.5, 24.5],
+    [7.5, 55.5]
 ];
 
+// If set, cut the model in half to be printed in two parts.
 sliceInHalf = false;
+
+// If sliceInHalf is set, how much the two halves should overlap.
 topHalfOverhang = 50;
 
 epsilon = .01;
