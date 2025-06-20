@@ -27,6 +27,9 @@ portCutout = true;
 // Dimensions of the power/button cutout on the side of the unit.
 portCutoutDims = [46,7];
 
+// Height of the port cutout from the bottom of the electronics compartment.
+portCutoutHeightFromBase = 5; // .1
+
 // Radius for screw holes.
 screwHoleRadius = 2.1;
 
@@ -199,7 +202,7 @@ module back() {
     offsetToPortCutout = [
         0,
         (frameDims.y - portCutoutDimsRotated.y)/2,
-        frameDims.z - portCutoutDimsRotated.z
+        wallThickness + portCutoutHeightFromBase
     ];
     
     screwBackCutoutDims = [
