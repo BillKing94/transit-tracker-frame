@@ -19,6 +19,8 @@ bevelRadius = 5;
 // Depth of the electronics compartment.
 circuitDepth = 12;
 
+portCutout = true;
+
 // Dimensions of the power/button cutout on the side of the unit.
 portCutoutDims = [46,7];
 
@@ -121,24 +123,18 @@ module front() {
     backCutoutDims = hadamard([1,1,0],displayVolume) - [2,2,0]*displayMountWidth + [0,0,wallThickness] + [0,0,2*epsilon];
     
     intersection() {
-        translate(displayOffset)
         difference() {
+            beveled_box(frameDims, bevelRadius, true);
+            
+            translate(displayOffset)
+            cube(displayVolume);
+            
+            translate(displayOffset)
             translate(cutoutOffsetFromDisplay)
-            difference() {
-                translate(-cutoutOffsetFromDisplay) {
-                    difference() {
-                        translate(-displayOffset)
-                            beveled_box(frameDims, bevelRadius, true);
-                        
-                        cube(displayVolume);
-                    }
-                }
-                
-                translate([0,0,-epsilon])
-                    cube(backCutoutDims);
-            }
+            translate([0,0,-epsilon])
+                cube(backCutoutDims);
             
-            
+            translate(displayOffset)
             translate([0,0,-wallThickness])    
             mounting_holes();
         }
@@ -201,50 +197,43 @@ module back() {
         frameDims.z - wallThickness
     ];
     
-    offsetToScrewBackCutout = [
+    offsetToScrewBackCutout1 = [
         wallThickness + bevelRadius,
         wallThickness,
         0
     ];
     
+    offsetToScrewBackCutout2 = [
+        wallThickness + bevelRadius,
+        frameDims.y - screwBackCutoutDims.y - wallThickness,
+        0
+    ];
+    
     translate([0,0,-frameDims.z])
     intersection() {
-        translate(displayOffset) {
-            difference() {
-                translate(-displayOffset) {
-                    mirror([0,1,0])
-                    translate(offsetToScrewBackCutout - [0,frameDims.y, 0])
-                    difference() {
-                        translate([0,frameDims.y, 0] - offsetToScrewBackCutout)
-                        mirror([0,1,0])
-                        translate(offsetToScrewBackCutout)
-                        difference() {
-                            translate(offsetToPortCutout - offsetToScrewBackCutout)
-                            difference() {
-                                translate(offsetToCircuitCutout-offsetToPortCutout)
-                                difference() {
-                                    translate(-offsetToCircuitCutout)
-                                        beveled_box(frameDims, bevelRadius, false);
-                                    
-                                    cube(circuitCutoutDims);
-                                }
-                                
-                                translate(epsilon*[-1,0,0])
-                                cube(portCutoutDimsRotated + epsilon*[2,0,1]);
-                            }
-                            
-                            translate(epsilon*[0,0,-1])
-                            cube(screwBackCutoutDims + epsilon*[0,0,1]);
-                        }
-                        
-                        translate(epsilon*[0,0,-1])
-                        cube(screwBackCutoutDims + epsilon*[0,0,1]);
-                    }
-                }
-                
-                translate([0,0,-wallThickness])
-                mounting_holes();
+        difference() {
+            beveled_box(frameDims, bevelRadius, false);
+            
+            translate(offsetToCircuitCutout)
+                cube(circuitCutoutDims);
+            
+            if(portCutout) {
+                translate(offsetToPortCutout)
+                translate(epsilon*[-1,0,0])
+                    cube(portCutoutDimsRotated + epsilon*[2,0,1]);
             }
+            
+            translate(offsetToScrewBackCutout1)
+            translate(epsilon*[0,0,-1])
+            cube(screwBackCutoutDims + epsilon*[0,0,1]);
+            
+            translate(offsetToScrewBackCutout2)
+            translate(epsilon*[0,0,-1])
+            cube(screwBackCutoutDims + epsilon*[0,0,1]);
+        
+            translate(displayOffset)
+            translate([0,0,-wallThickness])
+            mounting_holes();
         }
             
         if(sliceInHalf) {
