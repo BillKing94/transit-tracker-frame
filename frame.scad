@@ -30,7 +30,7 @@ portCutoutDims = [46,7];
 // Height of the port cutout from the bottom of the electronics compartment.
 portCutoutHeightFromBase = 5; // .1
 
-// Radius for screw holes.
+// Radius for display screw holes.
 screwHoleRadius = 2.1;
 
 // Positions of screw holes for each display, relative to the display's bottom-left corner.
@@ -46,7 +46,7 @@ screwPositions = [
 // Width of channels for screws.
 screwCutoutWidth = 10;
 
-// Radius for post holes.
+// Radius for display post holes.
 postHoleRadius = 2;
 
 // Positions of post holes for each display, relative to the display's bottom-left corner.
@@ -54,6 +54,29 @@ postPositions = [
     [152.5, 24.5],
     [7.5, 55.5]
 ];
+
+// If set, a separate mount should be added for the controller.
+addControllerMount = false;
+
+// Height of the controller module.
+controllerHeight = 44.5;
+
+// Rear clearance required for the controller module.
+controllerStandOff = 10;
+
+// Extra space around controller screw holes.
+controllerScrewPadding = 1.5;
+
+// Positions of controller mounting screws, relative to the controller's bottom-left corner.
+controllerScrewPositions = [
+    [7.5, 15.5],
+    [7.5, 35.5],
+    [48, 15.5],
+    [48, 35.5]
+];
+
+// Radius for controller screw holes.
+controllerScrewHoleRadius = 1.5;
 
 // If set, cut the model in half to be printed in two parts.
 sliceInHalf = false;
@@ -223,31 +246,75 @@ module back() {
         offsetToScrewBackCutout1.z
     ];
     
+    offsetToControllerStandoff = [
+        wallThickness,
+        .5*frameDims.y - .5*controllerHeight,
+        0
+    ];
+    
+    module controller_standoff_shell(inner) {
+        hull() {
+            screwBoxSize = ((inner ? [0,0,0] : [2,2,1])*wallThickness)
+                + [2,2,0]*controllerScrewHoleRadius
+                + [2,2,0]*controllerScrewPadding
+                + [0,0,1]*controllerStandOff
+                + (inner ? [0,0,epsilon] : [0,0,0]);
+            
+            translate(inner ? [0,0,-epsilon] : [0,0,0])
+            for(screwPos = controllerScrewPositions) {
+                translate(screwPos - hadamard([.5, .5, 0], screwBoxSize))
+                cube(screwBoxSize);
+            }
+        }
+    }
+    
     translate([0,0,-frameDims.z])
     intersection() {
         difference() {
-            beveled_box(frameDims, bevelRadius, false);
-            
-            translate(offsetToCircuitCutout)
-                cube(circuitCutoutDims);
-            
-            if(portCutout) {
-                translate(offsetToPortCutout)
-                translate(epsilon*[-1,0,0])
-                    cube(portCutoutDimsRotated + epsilon*[2,0,1]);
+            union() {
+                difference() {
+                    beveled_box(frameDims, bevelRadius, false);
+                    
+                    translate(offsetToCircuitCutout)
+                        cube(circuitCutoutDims);
+                    
+                    if(portCutout) {
+                        translate(offsetToPortCutout)
+                        translate(epsilon*[-1,0,0])
+                            cube(portCutoutDimsRotated + epsilon*[2,0,1]);
+                    }
+                    
+                    translate(offsetToScrewBackCutout1)
+                    translate(epsilon*[0,0,-1])
+                    cube(screwBackCutoutDims + epsilon*[0,0,1]);
+                   
+                    translate(offsetToScrewBackCutout2)
+                    translate(epsilon*[0,0,-1])
+                    cube(screwBackCutoutDims + epsilon*[0,0,1]);
+                    
+                    translate(displayOffset)
+                    translate([0,0,-wallThickness])
+                    mounting_holes();
+                }
+                
+                if(addControllerMount) {
+                    translate(offsetToControllerStandoff)
+                    if(controllerStandOff > 0)
+                        controller_standoff_shell(false);
+                }
             }
             
-            translate(offsetToScrewBackCutout1)
-            translate(epsilon*[0,0,-1])
-            cube(screwBackCutoutDims + epsilon*[0,0,1]);
-           
-            translate(offsetToScrewBackCutout2)
-            translate(epsilon*[0,0,-1])
-            cube(screwBackCutoutDims + epsilon*[0,0,1]);
-            
-            translate(displayOffset)
-            translate([0,0,-wallThickness])
-            mounting_holes();
+            if(addControllerMount) {
+                translate(offsetToControllerStandoff) {
+                    if(controllerStandOff > 0)
+                        controller_standoff_shell(true);
+                    
+                    for(screwPos = controllerScrewPositions) {
+                        translate(screwPos - [0,0,epsilon])
+                        cylinder(h = frameDims.z + epsilon, r = controllerScrewHoleRadius, $fn = 10);
+                    }
+                }
+            }
         }
             
         if(sliceInHalf) {
