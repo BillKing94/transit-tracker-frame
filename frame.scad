@@ -24,6 +24,13 @@ circuitDepth = 12;
 // Whether a cutout should be added for power/buttons.
 portCutout = true;
 
+// Whether the port cutout should be an inset cutout in the back of the frame.
+portCutoutInset = false;
+portCutoutSmall = !portCutoutInset;
+
+// If portCutoutInset is enabled, how far from the edge of the frame the controller should be positioned.
+portCutoutInsetDepth = 40;
+
 // Dimensions of the power/button cutout on the side of the unit.
 portCutoutDims = [46,7];
 
@@ -84,7 +91,7 @@ sliceInHalf = false;
 // If sliceInHalf is set, how much the two halves should overlap.
 topHalfOverhang = 50;
 
-epsilon = .01;
+epsilon = .1;
 
 $fn = $preview ? 20 : 70;
 
@@ -223,7 +230,7 @@ module back() {
     
     portCutoutDimsRotated = [wallThickness, portCutoutDims.x, portCutoutDims.y];
     offsetToPortCutout = [
-        0,
+        portCutoutInset ? portCutoutInsetDepth : 0,
         (frameDims.y - portCutoutDimsRotated.y)/2,
         wallThickness + portCutoutHeightFromBase
     ];
@@ -247,7 +254,7 @@ module back() {
     ];
     
     offsetToControllerStandoff = [
-        wallThickness,
+        ((portCutout && portCutoutInset) ? portCutoutInsetDepth : wallThickness),
         .5*frameDims.y - .5*controllerHeight,
         0
     ];
@@ -262,8 +269,54 @@ module back() {
             
             translate(inner ? [0,0,-epsilon] : [0,0,0])
             for(screwPos = controllerScrewPositions) {
-                translate(screwPos - hadamard([.5, .5, 0], screwBoxSize))
+                translate([screwPos.x, screwPos.y, 0] - hadamard([.5, .5, 0], screwBoxSize))
                 cube(screwBoxSize);
+            }
+            
+            if(!inner) {
+                for(screwPos = controllerScrewPositions) {
+                    spacerSize = [1,1,1];
+                    translate([0, screwPos.y - .5*screwBoxSize.y, 0])
+                    cube(screwBoxSize);
+                }
+            }
+        }
+    }
+    
+    module corner_cutout(inner) {
+        cutoutOuterDims = [
+            portCutoutInsetDepth + wallThickness,
+            (frameDims.y - circuitHeight) / 2 + circuitHeight + wallThickness,
+            controllerStandOff + portCutoutDims.y + 2*wallThickness
+        ];
+        
+        cutoutInnerDims = [
+            portCutoutInsetDepth - bevelRadius - wallThickness,
+            circuitHeight - 2*wallThickness,
+            controllerStandOff + portCutoutDims.y + wallThickness + epsilon
+        ];
+        
+        cutoutDims = inner ? cutoutInnerDims : cutoutOuterDims;
+        
+        insetBoxRadius = inner ? bevelRadius - wallThickness : bevelRadius;
+        
+        cutoutOuterOffset = [0, frameDims.y - cutoutDims.y, 0];
+        
+        cutoutInnerOffset = [
+            bevelRadius + wallThickness,
+            (frameDims.y - cutoutInnerDims.y) / 2,
+            -epsilon
+        ];
+        
+        cutoutOffset = inner ? cutoutInnerOffset : cutoutOuterOffset;
+        
+        intersection() {
+            translate(cutoutOffset)
+                beveled_box(cutoutDims, insetBoxRadius, false);
+            
+            if(!inner) {
+                translate(offsetToCircuitCutout)
+                cube(circuitCutoutDims);
             }
         }
     }
@@ -277,12 +330,6 @@ module back() {
                     
                     translate(offsetToCircuitCutout)
                         cube(circuitCutoutDims);
-                    
-                    if(portCutout) {
-                        translate(offsetToPortCutout)
-                        translate(epsilon*[-1,0,0])
-                            cube(portCutoutDimsRotated + epsilon*[2,0,1]);
-                    }
                     
                     translate(offsetToScrewBackCutout1)
                     translate(epsilon*[0,0,-1])
@@ -302,6 +349,10 @@ module back() {
                     if(controllerStandOff > 0)
                         controller_standoff_shell(false);
                 }
+                
+                if(portCutout && portCutoutInset) {
+                    corner_cutout(false);
+                }
             }
             
             if(addControllerMount) {
@@ -311,10 +362,21 @@ module back() {
                     
                     for(screwPos = controllerScrewPositions) {
                         translate(screwPos - [0,0,epsilon])
-                        cylinder(h = frameDims.z + epsilon, r = controllerScrewHoleRadius, $fn = 10);
+                        cylinder(h = frameDims.z + 2*epsilon, r = controllerScrewHoleRadius, $fn = 10);
                     }
                 }
             }
+                    
+            if(portCutout) {
+                translate(offsetToPortCutout)
+                translate(epsilon*[-1,0,0])
+                    cube(portCutoutDimsRotated + epsilon*[2,0,1]);
+                
+                if(portCutoutInset) {
+                    corner_cutout(true);
+                }
+            }
+                    
         }
             
         if(sliceInHalf) {
