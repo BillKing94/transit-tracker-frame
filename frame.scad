@@ -9,7 +9,8 @@ displayLayout=[2,1];
 
 // Width of the bezel around the displays.
 bezelWidth = 17;
-
+ 
+// Width of the flange on the left and right side of the displays.
 displaySideMountWidth = 15;
 
 // Radius of the exterior bevel.
@@ -20,6 +21,12 @@ circuitHeight = 53;
 
 // Depth of the electronics compartment.
 circuitDepth = 12;
+
+// For layouts with multiple rows of displays, the position of the cable passthrough from the display edge.
+cablePassthroughPos = 100;
+
+// For layouts with multiple rows of displays, the width of the cable passthrough.
+cablePassthroughWidth = 30;
 
 // Whether a cutout should be added for power/buttons.
 portCutout = true;
@@ -149,6 +156,28 @@ module beveled_box(dims, radius, bevelTopEdges) {
     }
 }
 
+    
+module cable_passthroughs(xPos, zDepth, inner)
+{     
+    if(displayLayout.y > 1) {
+        for(iDisplay = [1 : displayLayout.y - 1]) {
+            passthroughDims = [
+                cablePassthroughWidth + (inner ? 0 : 2*wallThickness),
+                displayDims.y - circuitHeight,
+                zDepth + (inner ? -wallThickness : 0)
+            ];
+            
+            offsetForPassthrough = [
+                bezelWidth + xPos + (inner ? 0 : -wallThickness),
+                bezelWidth + iDisplay * displayDims.y - .5*passthroughDims.y,
+                (inner ? wallThickness : 0)
+            ];
+            
+            translate(offsetForPassthrough)
+            cube(passthroughDims);
+        }    
+    }
+}
 
 module front() {
     frameDims = displayVolume
@@ -165,7 +194,11 @@ module front() {
         wallThickness + 2*epsilon
     ];
     
-    backCutoutOffset = hadamard([.5,.5,0], frameDims) - hadamard([.5,.5,0], backCutoutDims);
+    backCutoutOffset = [
+        .5 * frameDims.x - .5 * backCutoutDims.x,
+        bezelWidth + .5 * displayDims.y - .5 * backCutoutDims.y,
+        0
+    ];
     
     intersection() {
         difference() {
@@ -174,13 +207,19 @@ module front() {
             translate(displayOffset)
             cube(displayVolume);
             
-            translate(backCutoutOffset)
-            translate([0,0,-epsilon])
-                cube(backCutoutDims);
+            for(iDisplay = [0 : displayLayout.y - 1]) {
+                translate([0,iDisplay * displayDims.y, 0])
+                translate(backCutoutOffset)
+                translate([0,0,-epsilon])
+                    cube(backCutoutDims);
+            }
             
             translate(displayOffset)
             translate([0,0,-wallThickness])    
             mounting_holes();
+            
+            translate([0,0,-wallThickness])
+            cable_passthroughs(cablePassthroughPos, frameDims.z, true);
         }
         
         
@@ -224,38 +263,38 @@ module back() {
     
     offsetToCircuitCutout = [
         wallThickness,
-        .5*frameDims.y - .5*circuitCutoutDims.y,
+        bezelWidth + .5*displayDims.y - .5*circuitHeight,
         wallThickness
     ];
     
     portCutoutDimsRotated = [wallThickness, portCutoutDims.x, portCutoutDims.y];
     offsetToPortCutout = [
         portCutoutInset ? portCutoutInsetDepth : 0,
-        (frameDims.y - portCutoutDimsRotated.y)/2,
+        bezelWidth + .5*displayDims.y - .5*portCutoutDimsRotated.y,
         wallThickness + portCutoutHeightFromBase
     ];
     
     screwBackCutoutDims = [
-        frameDims.x - 2*wallThickness - 2*bevelRadius,
+        displayDims.x * displayLayout.x,
         screwCutoutWidth,
         frameDims.z - wallThickness
     ];
     
     offsetToScrewBackCutout1 = [
-        wallThickness + bevelRadius,
+        bezelWidth,
         bezelWidth,
         0
     ];
     
     offsetToScrewBackCutout2 = [
         offsetToScrewBackCutout1.x,
-        frameDims.y - offsetToScrewBackCutout1.y - screwCutoutWidth,
+        offsetToScrewBackCutout1.y + displayDims.y - screwBackCutoutDims.y,
         offsetToScrewBackCutout1.z
     ];
     
     offsetToControllerStandoff = [
         ((portCutout && portCutoutInset) ? portCutoutInsetDepth : wallThickness),
-        .5*frameDims.y - .5*controllerHeight,
+        bezelWidth + .5*displayDims.y - .5*controllerHeight,
         0
     ];
     
@@ -283,7 +322,7 @@ module back() {
         }
     }
     
-    module corner_cutout(inner) {
+    module port_inset_cutout(inner) {
         cutoutOuterDims = [
             portCutoutInsetDepth + wallThickness,
             (frameDims.y - circuitHeight) / 2 + circuitHeight + wallThickness,
@@ -300,11 +339,11 @@ module back() {
         
         insetBoxRadius = inner ? bevelRadius - wallThickness : bevelRadius;
         
-        cutoutOuterOffset = [0, frameDims.y - cutoutDims.y, 0];
+        cutoutOuterOffset = [0, bezelWidth + displayDims.y - cutoutDims.y, 0];
         
         cutoutInnerOffset = [
             bevelRadius + wallThickness,
-            (frameDims.y - cutoutInnerDims.y) / 2,
+            bezelWidth + (displayDims.y - cutoutInnerDims.y) / 2,
             -epsilon
         ];
         
@@ -328,16 +367,24 @@ module back() {
                 difference() {
                     beveled_box(frameDims, bevelRadius, false);
                     
-                    translate(offsetToCircuitCutout)
-                        cube(circuitCutoutDims);
+                    for(iDisplay = [0 : displayLayout.y - 1]) {
+                        translate(offsetToCircuitCutout)
+                        translate(iDisplay * displayDims.y * [0,1,0])
+                            cube(circuitCutoutDims);
+                    }
                     
-                    translate(offsetToScrewBackCutout1)
-                    translate(epsilon*[0,0,-1])
-                    cube(screwBackCutoutDims + epsilon*[0,0,1]);
-                   
-                    translate(offsetToScrewBackCutout2)
-                    translate(epsilon*[0,0,-1])
-                    cube(screwBackCutoutDims + epsilon*[0,0,1]);
+                    for(iDisplay = [0 : displayLayout.y - 1]) {
+                        offsetForDisplay = [0,iDisplay * displayDims.y, 0];
+                        translate(offsetForDisplay) {
+                            translate(offsetToScrewBackCutout1)
+                            translate(epsilon*[0,0,-1])
+                            cube(screwBackCutoutDims + epsilon*[0,0,1]);
+                           
+                            translate(offsetToScrewBackCutout2)
+                            translate(epsilon*[0,0,-1])
+                            cube(screwBackCutoutDims + epsilon*[0,0,1]);
+                        }
+                    }
                     
                     translate(displayOffset)
                     translate([0,0,-wallThickness])
@@ -351,8 +398,10 @@ module back() {
                 }
                 
                 if(portCutout && portCutoutInset) {
-                    corner_cutout(false);
+                    port_inset_cutout(false);
                 }
+                
+                cable_passthroughs(cablePassthroughPos, frameDims.z, false);
             }
             
             if(addControllerMount) {
@@ -373,10 +422,11 @@ module back() {
                     cube(portCutoutDimsRotated + epsilon*[2,0,1]);
                 
                 if(portCutoutInset) {
-                    corner_cutout(true);
+                    port_inset_cutout(true);
                 }
             }
-                    
+            
+            cable_passthroughs(cablePassthroughPos, frameDims.z, true);
         }
             
         if(sliceInHalf) {
