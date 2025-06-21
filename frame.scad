@@ -7,8 +7,8 @@ displayDims = [160, 80, 14.6];
 // Display module layout.
 displayLayout=[2,1];
 
-// Width of the bevel around the displays.
-bevelWidth = 17;
+// Width of the bezel around the displays.
+bezelWidth = 17;
 
 displaySideMountWidth = 15;
 
@@ -51,7 +51,7 @@ screwPositions = [
 ];
 
 // Width of channels for screws.
-screwCutoutWidth = 10;
+screwCutoutWidth = 12;
 
 // Radius for display post holes.
 postHoleRadius = 2;
@@ -153,9 +153,9 @@ module beveled_box(dims, radius, bevelTopEdges) {
 module front() {
     frameDims = displayVolume
         + [0,0,1]*wallThickness
-        + [1,1,0]*2*bevelWidth;
+        + [1,1,0]*2*bezelWidth;
     
-    displayOffset = [bevelWidth,bevelWidth,wallThickness];
+    displayOffset = [bezelWidth,bezelWidth,wallThickness];
     
     //backCutoutDims = hadamard([1,1,0],displayVolume) - [2,2,0]*displayMountWidth + [0,0,wallThickness] + [0,0,2*epsilon];
     
@@ -212,9 +212,9 @@ module back() {
     frameDims = hadamard([1,1,0], displayVolume)
         + [0,0,1]*circuitDepth
         + [0,0,1]*wallThickness
-        + [1,1,0]*2*bevelWidth;
+        + [1,1,0]*2*bezelWidth;
     
-    displayOffset = [bevelWidth, bevelWidth, frameDims.z];
+    displayOffset = [bezelWidth, bezelWidth, frameDims.z];
     
     circuitCutoutDims = [ 
         frameDims.x - 2*wallThickness,
@@ -243,7 +243,7 @@ module back() {
     
     offsetToScrewBackCutout1 = [
         wallThickness + bevelRadius,
-        offsetToCircuitCutout.y - wallThickness - screwCutoutWidth,
+        bezelWidth,
         0
     ];
     
