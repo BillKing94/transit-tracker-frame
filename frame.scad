@@ -2,7 +2,12 @@
 wallThickness = 2;
 
 // Dimensions of one display module.
-displayDims = [160, 80, 14.6];
+displayDimsRaw = [160, 80, 14.6];
+
+// Extra wiggle room around the display.
+displayWiggleRoom = .5;
+
+displayDims = displayDimsRaw + [1,1,0]*displayWiggleRoom;
 
 // Display module layout.
 displayLayout=[2,1];
@@ -61,7 +66,7 @@ screwPositions = [
 screwCutoutWidth = 12;
 
 // Radius for display post holes.
-postHoleRadius = 2;
+postHoleRadius = 3;
 
 // Positions of post holes for each display, relative to the display's bottom-left corner.
 postPositions = [
@@ -79,7 +84,7 @@ controllerHeight = 44.5;
 controllerStandOff = 10;
 
 // Extra space around controller screw holes.
-controllerScrewPadding = 1.5;
+controllerScrewPadding = 2;
 
 // Positions of controller mounting screws, relative to the controller's bottom-left corner.
 controllerScrewPositions = [
@@ -110,7 +115,8 @@ displayVolume = hadamard([displayLayout.x, displayLayout.y, 1], displayDims);
 module mounting_holes() { 
     for(disX = [0:displayLayout.x-1]) {
         for(disY = [0:displayLayout.y-1]) {
-            displayOffset = [displayDims.x * disX, displayDims.y * disY, 0];
+            displayOffset = [displayDims.x * disX, displayDims.y * disY, 0]
+                + [.5, .5, 0] * displayWiggleRoom;
             
             translate(displayOffset) {
                 for(pos = screwPositions) {
