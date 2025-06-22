@@ -464,7 +464,7 @@ module back() {
                     cube(portCutoutDimsRotated + epsilon*[2,0,1]);
                 
                 if(portCutoutInset) {
-                    #port_inset_cutout(true);
+                    port_inset_cutout(true);
                 }
             }
             
