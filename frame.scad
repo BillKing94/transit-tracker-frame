@@ -343,8 +343,6 @@ module back() {
         
         cutoutDims = inner ? cutoutInnerDims : cutoutOuterDims;
         
-        insetBoxRadius = inner ? bevelRadius - wallThickness : bevelRadius;
-        
         cutoutOuterOffset = [0, bezelWidth + displayDims.y - cutoutDims.y, 0];
         
         cutoutInnerOffset = [
@@ -357,12 +355,50 @@ module back() {
         
         intersection() {
             translate(cutoutOffset)
-                beveled_box(cutoutDims, insetBoxRadius, false);
+                cube(cutoutDims);
             
             if(!inner) {
                 translate(offsetToCircuitCutout)
                 cube(circuitCutoutDims);
             }
+        }
+            
+        module cutout_for_wire_routing() {
+            cutoutDepth = cutoutInnerDims.z;
+            cutoutHeight = cutoutInnerDims.x;
+        
+            wireCutoutDepth = .5 * (displayDims.y - cutoutInnerDims.y - 2*screwCutoutWidth);
+            wireCutoutStraightPartWidth = cutoutHeight - cutoutDepth;
+            
+            translate([0, wireCutoutDepth, 0])
+            rotate([90, 0, 0])
+            linear_extrude(wireCutoutDepth)
+            polygon([
+                [0, 0],
+                [wireCutoutStraightPartWidth + cutoutDepth, 0],
+                [wireCutoutStraightPartWidth, cutoutDepth],
+                [0, cutoutDepth]
+            ]);
+        }
+        
+        if(inner) {
+            wireCutoutOffset1 = [
+                bezelWidth,
+                bezelWidth + screwCutoutWidth,
+                0
+            ];
+            
+            wireCutoutOffset2 = [
+                wireCutoutOffset1.x,
+                cutoutOffset.y + cutoutDims.y,
+                wireCutoutOffset1.z
+            ];
+            
+            translate(wireCutoutOffset1)
+            cutout_for_wire_routing();
+            
+            translate(wireCutoutOffset2)
+            cutout_for_wire_routing();
         }
     }
     
