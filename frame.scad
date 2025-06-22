@@ -336,7 +336,7 @@ module back() {
         ];
         
         cutoutInnerDims = [
-            portCutoutInsetDepth - bevelRadius - wallThickness,
+            portCutoutInsetDepth - bezelWidth,
             circuitHeight - 2*wallThickness,
             controllerStandOff + portCutoutDims.y + wallThickness + epsilon
         ];
@@ -346,7 +346,7 @@ module back() {
         cutoutOuterOffset = [0, bezelWidth + displayDims.y - cutoutDims.y, 0];
         
         cutoutInnerOffset = [
-            bevelRadius + wallThickness,
+            bezelWidth,
             bezelWidth + (displayDims.y - cutoutInnerDims.y) / 2,
             -epsilon
         ];
@@ -464,7 +464,7 @@ module back() {
                     cube(portCutoutDimsRotated + epsilon*[2,0,1]);
                 
                 if(portCutoutInset) {
-                    port_inset_cutout(true);
+                    #port_inset_cutout(true);
                 }
             }
             
