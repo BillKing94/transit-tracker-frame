@@ -1,6 +1,14 @@
+/* [General] */
 // Thickness of all thin walls.
 wallThickness = 2;
 
+// Width of the bezel around the displays.
+bezelWidth = 17;
+
+// Radius of the exterior bevel.
+bevelRadius = 5;
+ 
+/* [Displays] */
 // Dimensions of one display module.
 displayDimsRaw = [160, 80, 14.6];
 
@@ -11,16 +19,11 @@ displayDims = displayDimsRaw + [1,1,0]*displayWiggleRoom;
 
 // Display module layout.
 displayLayout=[2,1];
-
-// Width of the bezel around the displays.
-bezelWidth = 17;
  
 // Width of the flange on the left and right side of the displays.
 displaySideMountWidth = 15;
 
-// Radius of the exterior bevel.
-bevelRadius = 5;
-
+/* [Electronics] */
 // Height of cavity for electronic components.
 circuitHeight = 53;
 
@@ -33,6 +36,7 @@ cablePassthroughPos = 100;
 // For layouts with multiple rows of displays, the width of the cable passthrough.
 cablePassthroughWidth = 30;
 
+/* [Port Cutout] */
 // Whether a cutout should be added for power/buttons.
 portCutout = true;
 
@@ -49,6 +53,7 @@ portCutoutDims = [46,7];
 // Height of the port cutout from the bottom of the electronics compartment.
 portCutoutHeightFromBase = 5; // .1
 
+/* [Display Mounting] */
 // Radius for display screw holes.
 screwHoleRadius = 2.1;
 
@@ -68,12 +73,13 @@ screwCutoutWidth = 12;
 // Radius for display post holes.
 postHoleRadius = 3;
 
-// Positions of post holes for each display, relative to the display's bottom-left corner.
+// Positions of post holes for each display, relative to the display's bottom-left corner. An optional third value of LEFT, RIGHT, UP, or DOWN (in quotes) may be provided with each vector to indicate a direction to cut a slot.
 postPositions = [
-    [152.5, 24.5],
-    [7.5, 55.5]
+    [7.5, 55.5, "RIGHT"],
+    [152.5, 24.5, "LEFT"]
 ];
 
+/* [Controller Mounting] */
 // If set, a separate mount should be added for the controller.
 addControllerMount = false;
 
@@ -97,20 +103,31 @@ controllerScrewPositions = [
 // Radius for controller screw holes.
 controllerScrewHoleRadius = 1.5;
 
+/* [Multi-Part Printing] */
 // If set, cut the model in half to be printed in two parts.
 sliceInHalf = false;
 
 // If sliceInHalf is set, how much the two halves should overlap.
 topHalfOverhang = 50;
 
+/* [Miscellaneous] */
 epsilon = .1;
 
 $fn = $preview ? 20 : 70;
+
+displayTopBottomMountWidth = (displayDims.y - circuitHeight)/2;
 
 function hadamard(v1, v2) = 
     [v1.x*v2.x, v1.y*v2.y, v1.z*v2.z];
 
 displayVolume = hadamard([displayLayout.x, displayLayout.y, 1], displayDims);
+
+function str_to_dir(dirName) =
+    (dirName == "LEFT") ? [-1, 0, 0] : 
+    (dirName == "RIGHT") ? [1, 0, 0] :
+    (dirName == "UP") ? [0, 1, 0] :
+    (dirName == "DOWN") ? [0, -1, 0]
+    : [0,0,0];
 
 module mounting_holes() { 
     for(disX = [0:displayLayout.x-1]) {
@@ -126,7 +143,18 @@ module mounting_holes() {
                 
                 for(pos = postPositions) {
                     translate([pos.x, pos.y, -epsilon])
-                    cylinder(h=wallThickness + 2*epsilon, r=postHoleRadius, $fn=10);
+                    hull() {
+                        cylinder(h=wallThickness + 2*epsilon, r=postHoleRadius, $fn=10);
+                        dirName = pos.z;
+                        
+                        slotSize = (dirName == "LEFT" || dirName == "RIGHT")
+                            ? displaySideMountWidth
+                            : displayTopBottomMountWidth;
+                        
+                        cylinderCutDirection = str_to_dir(pos.z);
+                        translate(cylinderCutDirection * slotSize)
+                        cylinder(h=wallThickness + 2*epsilon, r=postHoleRadius, $fn=10);
+                    }
                 }
             }
         }
