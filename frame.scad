@@ -13,9 +13,7 @@ bevelRadius = 5;
 displayDimsRaw = [160, 80, 14.6];
 
 // Extra wiggle room around the display.
-displayWiggleRoom = .5;
-
-displayDims = displayDimsRaw + [1,1,0]*displayWiggleRoom;
+displayWiggleRoom = [2, 1, 0];
 
 // Display module layout.
 displayLayout=[2,1];
@@ -115,12 +113,13 @@ epsilon = .1;
 
 $fn = $preview ? 20 : 70;
 
-displayTopBottomMountWidth = (displayDims.y - circuitHeight)/2;
-
 function hadamard(v1, v2) = 
     [v1.x*v2.x, v1.y*v2.y, v1.z*v2.z];
 
+displayDims = displayDimsRaw + hadamard([1,1,0], displayWiggleRoom);
 displayVolume = hadamard([displayLayout.x, displayLayout.y, 1], displayDims);
+
+displayTopBottomMountWidth = (displayDims.y - circuitHeight)/2;
 
 function str_to_dir(dirName) =
     (dirName == "LEFT") ? [-1, 0, 0] : 
@@ -133,7 +132,7 @@ module mounting_holes() {
     for(disX = [0:displayLayout.x-1]) {
         for(disY = [0:displayLayout.y-1]) {
             displayOffset = [displayDims.x * disX, displayDims.y * disY, 0]
-                + [.5, .5, 0] * displayWiggleRoom;
+                + hadamard([.5, .5, 0], displayWiggleRoom);
             
             translate(displayOffset) {
                 for(pos = screwPositions) {
