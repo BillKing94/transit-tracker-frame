@@ -13,7 +13,7 @@ bevelRadius = 5;
 displayDimsRaw = [160, 80, 14.6];
 
 // Extra wiggle room around the display.
-displayWiggleRoom = [2, 1, 0];
+displayWiggleRoom = [1, 1, 0];
 
 // Display module layout.
 displayLayout=[2,1];
