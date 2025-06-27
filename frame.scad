@@ -43,7 +43,7 @@ portCutoutInset = false;
 portCutoutSmall = !portCutoutInset;
 
 // If portCutoutInset is enabled, how far from the edge of the frame the controller should be positioned.
-portCutoutInsetDepth = 40;
+portCutoutInsetDepth = 55;
 
 // Dimensions of the power/button cutout on the side of the unit.
 portCutoutDims = [46,7];
