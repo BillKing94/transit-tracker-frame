@@ -108,6 +108,22 @@ sliceInHalf = false;
 // If sliceInHalf is set, how much the two halves should overlap.
 topHalfOverhang = 50;
 
+/* [Stand] */
+// Whether to generate a stand for the frame, rather than the frame itself.
+stand = false;
+
+// The distance the stand should extend out from the frame.zs
+standFootWidth = 30;
+
+// How much the stand should elevate the frame.
+standElevation = 10;
+
+// How thick the stand should be.
+standThickness = 20;
+
+// How much extra wiggle room should be added to accomodate the frame.
+standWiggleRoom = 1;
+
 /* [Miscellaneous] */
 epsilon = .1;
 
@@ -120,6 +136,22 @@ displayDims = displayDimsRaw + hadamard([1,1,0], displayWiggleRoom);
 displayVolume = hadamard([displayLayout.x, displayLayout.y, 1], displayDims);
 
 displayTopBottomMountWidth = (displayDims.y - circuitHeight)/2;
+
+
+frontDims = displayVolume
+    + [0,0,1]*wallThickness
+    + [1,1,0]*2*bezelWidth;
+    
+backDims = hadamard([1,1,0], displayVolume)
+    + [0,0,1]*circuitDepth
+    + [0,0,1]*wallThickness
+    + [1,1,0]*2*bezelWidth;
+    
+fullFrameDims = [
+    backDims.x,
+    backDims.y,
+    frontDims.z + backDims.z
+];
 
 function str_to_dir(dirName) =
     (dirName == "LEFT") ? [-1, 0, 0] : 
@@ -213,10 +245,6 @@ module cable_passthroughs(xPos, zDepth, inner)
 }
 
 module front() {
-    frameDims = displayVolume
-        + [0,0,1]*wallThickness
-        + [1,1,0]*2*bezelWidth;
-    
     displayOffset = [bezelWidth,bezelWidth,wallThickness];
     
     //backCutoutDims = hadamard([1,1,0],displayVolume) - [2,2,0]*displayMountWidth + [0,0,wallThickness] + [0,0,2*epsilon];
@@ -228,14 +256,14 @@ module front() {
     ];
     
     backCutoutOffset = [
-        .5 * frameDims.x - .5 * backCutoutDims.x,
+        .5 * frontDims.x - .5 * backCutoutDims.x,
         bezelWidth + .5 * displayDims.y - .5 * backCutoutDims.y,
         0
     ];
     
     intersection() {
         difference() {
-            beveled_box(frameDims, bevelRadius, true);
+            beveled_box(frontDims, bevelRadius, true);
             
             translate(displayOffset)
             cube(displayVolume);
@@ -252,28 +280,28 @@ module front() {
             mounting_holes();
             
             translate([0,0,-wallThickness])
-            cable_passthroughs(cablePassthroughPos, frameDims.z, true);
+            cable_passthroughs(cablePassthroughPos, frontDims.z, true);
         }
         
         
         
         if(sliceInHalf) {
             overhangHull1 = [
-                .5*frameDims.x + .5*topHalfOverhang,
-                .5*frameDims.y,
-                frameDims.z
+                .5*frontDims.x + .5*topHalfOverhang,
+                .5*frontDims.y,
+                frontDims.z
             ];
             
             overhangHull2 = [
-                .5*frameDims.x - .5*topHalfOverhang,
-                .5*frameDims.y,
-                frameDims.z
+                .5*frontDims.x - .5*topHalfOverhang,
+                .5*frontDims.y,
+                frontDims.z
             ];
             
             union() {
                 cube(overhangHull1);
                 
-                translate([0,.5*frameDims.y, 0])
+                translate([0,.5*frontDims.y, 0])
                 cube(overhangHull2);
             }
         }
@@ -281,15 +309,11 @@ module front() {
 }
 
 module back() {
-    frameDims = hadamard([1,1,0], displayVolume)
-        + [0,0,1]*circuitDepth
-        + [0,0,1]*wallThickness
-        + [1,1,0]*2*bezelWidth;
     
-    displayOffset = [bezelWidth, bezelWidth, frameDims.z];
+    displayOffset = [bezelWidth, bezelWidth, backDims.z];
     
     circuitCutoutDims = [ 
-        frameDims.x - 2*wallThickness,
+        backDims.x - 2*wallThickness,
         circuitHeight,
         circuitDepth + epsilon
     ];
@@ -310,7 +334,7 @@ module back() {
     screwBackCutoutDims = [
         displayDims.x * displayLayout.x,
         screwCutoutWidth,
-        frameDims.z - wallThickness
+        backDims.z - wallThickness
     ];
     
     offsetToScrewBackCutout1 = [
@@ -358,7 +382,7 @@ module back() {
     module port_inset_cutout(inner) {
         cutoutOuterDims = [
             portCutoutInsetDepth + wallThickness,
-            (frameDims.y - circuitHeight) / 2 + circuitHeight + wallThickness,
+            (backDims.y - circuitHeight) / 2 + circuitHeight + wallThickness,
             controllerStandOff + portCutoutDims.y + 2*wallThickness
         ];
         
@@ -429,12 +453,12 @@ module back() {
         }
     }
     
-    translate([0,0,-frameDims.z])
+    translate([0,0,-backDims.z])
     intersection() {
         difference() {
             union() {
                 difference() {
-                    beveled_box(frameDims, bevelRadius, false);
+                    beveled_box(backDims, bevelRadius, false);
                     
                     for(iDisplay = [0 : displayLayout.y - 1]) {
                         translate(offsetToCircuitCutout)
@@ -470,7 +494,7 @@ module back() {
                     port_inset_cutout(false);
                 }
                 
-                cable_passthroughs(cablePassthroughPos, frameDims.z, false);
+                cable_passthroughs(cablePassthroughPos, backDims.z, false);
             }
             
             if(addControllerMount) {
@@ -480,7 +504,7 @@ module back() {
                     
                     for(screwPos = controllerScrewPositions) {
                         translate(screwPos - [0,0,epsilon])
-                        cylinder(h = frameDims.z + 2*epsilon, r = controllerScrewHoleRadius, $fn = 10);
+                        cylinder(h = backDims.z + 2*epsilon, r = controllerScrewHoleRadius, $fn = 10);
                     }
                 }
             }
@@ -495,17 +519,48 @@ module back() {
                 }
             }
             
-            cable_passthroughs(cablePassthroughPos, frameDims.z, true);
+            cable_passthroughs(cablePassthroughPos, backDims.z, true);
         }
             
         if(sliceInHalf) {
-            sliceDims = [.5*frameDims.x, frameDims.y, frameDims.z];
+            sliceDims = [.5*backDims.x, backDims.y, backDims.z];
             cube(sliceDims);
         }
     }
 }
 
-union() {
-    front();
-    back();
+module frame() {
+    translate([0,0,backDims.z])
+    union() {
+        front();
+        back();
+    }
+}
+
+if(stand) {
+    standDims = [fullFrameDims.z + 2*standFootWidth, bezelWidth + standElevation];
+    
+    difference() {
+        translate([bezelWidth,-standElevation - epsilon,standDims.x/2 + fullFrameDims.z/2])
+        rotate([0,90,0])
+        linear_extrude(standThickness)
+        difference() {
+            square(standDims);
+            
+            translate([0, standFootWidth + standElevation])
+            circle(standFootWidth);
+            
+            translate([standDims.x, standFootWidth + standElevation])
+            circle(standFootWidth);
+        }
+        
+        translate([0,0,-.5*standWiggleRoom])
+        frame();
+        
+        translate([0,0,.5*standWiggleRoom])
+        frame();
+    }
+}
+else {
+frame();
 }
