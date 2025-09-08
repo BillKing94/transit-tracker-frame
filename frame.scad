@@ -540,38 +540,45 @@ module frame() {
     }
 }
 
-if(stand) {
+module stand_body() {
     standDims = [fullFrameDims.z + 2*standFootWidth, bezelWidth + standElevation];
     
+    translate([bezelWidth,-standElevation - epsilon,standDims.x/2 + fullFrameDims.z/2])
+    rotate([0,90,0])
+    linear_extrude(standThickness)
     difference() {
-        translate([bezelWidth,-standElevation - epsilon,standDims.x/2 + fullFrameDims.z/2])
-        rotate([0,90,0])
-        linear_extrude(standThickness)
+        square(standDims);
+        
+        translate([standOuterRadius, standFootWidth + standElevation])
+        circle(r=standFootWidth);
+        
+        translate([standDims.x - standOuterRadius, standFootWidth + standElevation])
+        circle(r=standFootWidth);
+    
+        // Rounded outer edges
+        translate([0, standElevation - standOuterRadius, 0])
         difference() {
-            square(standDims);
-            
-            translate([standOuterRadius, standFootWidth + standElevation])
-            circle(r=standFootWidth);
-            
-            translate([standDims.x - standOuterRadius, standFootWidth + standElevation])
-            circle(r=standFootWidth);
-        
-            // Rounded outer edges
-            translate([0, standElevation - standOuterRadius, 0])
-            difference() {
-                square(standOuterRadius * [1,2]);
-               
-                translate([standOuterRadius, 0])
-                circle(r=standOuterRadius);
-            }
-            
-            translate([standDims.x - standOuterRadius, standElevation- standOuterRadius, 0])
-            difference() {
-                square(standOuterRadius * [1,2]);
-                circle(r=standOuterRadius);
-            }
-        
+            square(standOuterRadius * [1,2]);
+           
+            translate([standOuterRadius, 0])
+            circle(r=standOuterRadius);
         }
+        
+        translate([standDims.x - standOuterRadius, standElevation- standOuterRadius, 0])
+        difference() {
+            square(standOuterRadius * [1,2]);
+            circle(r=standOuterRadius);
+        }
+    
+    }
+}
+
+if(stand) {
+    translate([0,0,standElevation])
+    rotate([90,0,0])
+    difference() {
+        stand_body();
+
         translate([0,0,-.5*standWiggleRoom])
         frame();
         
