@@ -121,8 +121,11 @@ standElevation = 10;
 // How thick the stand should be.
 standThickness = 20;
 
+// Radius for stand outer edge rounding.
+standOuterRadius = 2;
+
 // How much extra wiggle room should be added to accomodate the frame.
-standWiggleRoom = 1;
+standWiggleRoom = .5; // .1
 
 /* [Miscellaneous] */
 epsilon = .1;
@@ -547,13 +550,28 @@ if(stand) {
         difference() {
             square(standDims);
             
-            translate([0, standFootWidth + standElevation])
-            circle(standFootWidth);
+            translate([standOuterRadius, standFootWidth + standElevation])
+            circle(r=standFootWidth);
             
-            translate([standDims.x, standFootWidth + standElevation])
-            circle(standFootWidth);
-        }
+            translate([standDims.x - standOuterRadius, standFootWidth + standElevation])
+            circle(r=standFootWidth);
         
+            // Rounded outer edges
+            translate([0, standElevation - standOuterRadius, 0])
+            difference() {
+                square(standOuterRadius * [1,2]);
+               
+                translate([standOuterRadius, 0])
+                circle(r=standOuterRadius);
+            }
+            
+            translate([standDims.x - standOuterRadius, standElevation- standOuterRadius, 0])
+            difference() {
+                square(standOuterRadius * [1,2]);
+                circle(r=standOuterRadius);
+            }
+        
+        }
         translate([0,0,-.5*standWiggleRoom])
         frame();
         
@@ -562,5 +580,5 @@ if(stand) {
     }
 }
 else {
-frame();
+    frame();
 }
