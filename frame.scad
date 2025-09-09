@@ -3,7 +3,7 @@
 wallThickness = 2;
 
 // Width of the bezel around the displays.
-bezelWidth = 17;
+bezelWidth = [17,13];
 
 // Radius of the exterior bevel.
 bevelRadius = 5;
@@ -140,15 +140,17 @@ displayVolume = hadamard([displayLayout.x, displayLayout.y, 1], displayDims);
 
 displayTopBottomMountWidth = (displayDims.y - circuitHeight)/2;
 
+bezelSize = [bezelWidth.x, bezelWidth.y, 0];
+
 
 frontDims = displayVolume
     + [0,0,1]*wallThickness
-    + [1,1,0]*2*bezelWidth;
+    + 2 * bezelSize;
     
 backDims = hadamard([1,1,0], displayVolume)
     + [0,0,1]*circuitDepth
     + [0,0,1]*wallThickness
-    + [1,1,0]*2*bezelWidth;
+    + 2 * bezelSize;
     
 fullFrameDims = [
     backDims.x,
@@ -236,8 +238,8 @@ module cable_passthroughs(xPos, zDepth, inner)
             ];
             
             offsetForPassthrough = [
-                bezelWidth + xPos + (inner ? 0 : -wallThickness),
-                bezelWidth + iDisplay * displayDims.y - .5*passthroughDims.y,
+                bezelWidth.x + xPos + (inner ? 0 : -wallThickness),
+                bezelWidth.y + iDisplay * displayDims.y - .5*passthroughDims.y,
                 (inner ? wallThickness : 0)
             ];
             
@@ -248,7 +250,7 @@ module cable_passthroughs(xPos, zDepth, inner)
 }
 
 module front() {
-    displayOffset = [bezelWidth,bezelWidth,wallThickness];
+    displayOffset = [bezelWidth.x,bezelWidth.y,wallThickness];
     
     //backCutoutDims = hadamard([1,1,0],displayVolume) - [2,2,0]*displayMountWidth + [0,0,wallThickness] + [0,0,2*epsilon];
     
@@ -260,7 +262,7 @@ module front() {
     
     backCutoutOffset = [
         .5 * frontDims.x - .5 * backCutoutDims.x,
-        bezelWidth + .5 * displayDims.y - .5 * backCutoutDims.y,
+        bezelWidth.y + .5 * displayDims.y - .5 * backCutoutDims.y,
         0
     ];
     
@@ -279,7 +281,7 @@ module front() {
             }
             
             translate(displayOffset)
-            translate([0,0,-wallThickness])    
+            translate([0,0,-wallThickness])
             mounting_holes();
             
             translate([0,0,-wallThickness])
@@ -313,7 +315,7 @@ module front() {
 
 module back() {
     
-    displayOffset = [bezelWidth, bezelWidth, backDims.z];
+    displayOffset = [bezelWidth.x, bezelWidth.y, backDims.z];
     
     circuitCutoutDims = [ 
         backDims.x - 2*wallThickness,
@@ -323,14 +325,14 @@ module back() {
     
     offsetToCircuitCutout = [
         wallThickness,
-        bezelWidth + .5*displayDims.y - .5*circuitHeight,
+        bezelWidth.y + .5*displayDims.y - .5*circuitHeight,
         wallThickness
     ];
     
     portCutoutDimsRotated = [wallThickness, portCutoutDims.x, portCutoutDims.y];
     offsetToPortCutout = [
         portCutoutInset ? portCutoutInsetDepth : 0,
-        bezelWidth + .5*displayDims.y - .5*portCutoutDimsRotated.y,
+        bezelWidth.y + .5*displayDims.y - .5*portCutoutDimsRotated.y,
         wallThickness + portCutoutHeightFromBase
     ];
     
@@ -341,8 +343,8 @@ module back() {
     ];
     
     offsetToScrewBackCutout1 = [
-        bezelWidth,
-        bezelWidth,
+        bezelWidth.x,
+        bezelWidth.y,
         0
     ];
     
@@ -354,7 +356,7 @@ module back() {
     
     offsetToControllerStandoff = [
         ((portCutout && portCutoutInset) ? portCutoutInsetDepth : wallThickness),
-        bezelWidth + .5*displayDims.y - .5*controllerHeight,
+        bezelWidth.y + .5*displayDims.y - .5*controllerHeight,
         0
     ];
     
@@ -390,18 +392,18 @@ module back() {
         ];
         
         cutoutInnerDims = [
-            portCutoutInsetDepth - bezelWidth,
+            portCutoutInsetDepth - bezelWidth.x,
             circuitHeight - 2*wallThickness,
             controllerStandOff + portCutoutDims.y + wallThickness + epsilon
         ];
         
         cutoutDims = inner ? cutoutInnerDims : cutoutOuterDims;
         
-        cutoutOuterOffset = [0, bezelWidth + displayDims.y - cutoutDims.y, 0];
+        cutoutOuterOffset = [0, bezelWidth.y + displayDims.y - cutoutDims.y, 0];
         
         cutoutInnerOffset = [
-            bezelWidth,
-            bezelWidth + (displayDims.y - cutoutInnerDims.y) / 2,
+            bezelWidth.x,
+            bezelWidth.y + (displayDims.y - cutoutInnerDims.y) / 2,
             -epsilon
         ];
         
@@ -437,8 +439,8 @@ module back() {
         
         if(inner) {
             wireCutoutOffset1 = [
-                bezelWidth,
-                bezelWidth + screwCutoutWidth,
+                bezelWidth.x,
+                bezelWidth.y + screwCutoutWidth,
                 0
             ];
             
@@ -541,9 +543,9 @@ module frame() {
 }
 
 module stand_body() {
-    standDims = [fullFrameDims.z + 2*standFootWidth, bezelWidth + standElevation];
+    standDims = [fullFrameDims.z + 2*standFootWidth, bezelWidth.y + standElevation];
     
-    translate([bezelWidth,-standElevation - epsilon,standDims.x/2 + fullFrameDims.z/2])
+    translate([bezelWidth.y,-standElevation - epsilon,standDims.x/2 + fullFrameDims.z/2])
     rotate([0,90,0])
     linear_extrude(standThickness)
     difference() {
