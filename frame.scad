@@ -3,7 +3,7 @@
 wallThickness = 2;
 
 // Width of the bezel around the displays.
-bezelWidth = [17,13];
+bezelWidth = [17,17];
 
 // Radius of the exterior bevel.
 bevelRadius = 5;
@@ -33,6 +33,31 @@ cablePassthroughPos = 100;
 
 // For layouts with multiple rows of displays, the width of the cable passthrough.
 cablePassthroughWidth = 30;
+
+/* [Hangers] */
+// Whether teardrop hangers should be added for hanging the display on a wall.
+addHangersTop = false;
+
+// Adds hangers for hanging "upside down." Also useful for multi-part printing.
+addHangersBottom = false;
+
+// Radius for the top of each hanger.
+hangerRadiusTop = 3;
+
+// Radius for the bottom of each hanger.
+hangerRadiusBottom = 7;
+
+// How much overhang should be added to grip the nail/screw head when hanging.
+hangerLip = 2;
+
+// How thick the hanger lip should be.
+hangerLipThickness = 2; // .1
+
+// How deep the hanging hole should extend into the body of the frame.
+hangerDepth = 5; // .1
+
+// Height of each hanger.
+hangerHeight = 15;
 
 /* [Port Cutout] */
 // Whether a cutout should be added for power/buttons.
@@ -534,11 +559,52 @@ module back() {
     }
 }
 
+module teardrop(radiusTop, radiusBottom, height) {
+    circleSpacing = height - radiusTop - radiusBottom;
+    
+    translate([0, -radiusTop, 0])
+    hull() {
+        circle(r=radiusTop);
+        
+        translate([0, -circleSpacing, 0])
+        circle(r=radiusBottom);
+    }
+}
+
+module hanger() {
+    translate([0,0,hangerLipThickness])
+    linear_extrude(hangerDepth - hangerLipThickness)
+    teardrop(hangerRadiusTop, hangerRadiusBottom, hangerHeight);
+    
+    linear_extrude(hangerDepth)
+    teardrop(hangerRadiusTop - hangerLip, hangerRadiusBottom - hangerLip, hangerHeight - hangerLipThickness);
+}
+
 module frame() {
-    translate([0,0,backDims.z])
-    union() {
-        front();
-        back();
+    difference() {
+        translate([0,0,backDims.z])
+        union() {
+            front();
+            back();
+        }
+        
+        if(addHangersTop) {
+            translate([bezelWidth.x/2, backDims.y - wallThickness, 0])
+            hanger();
+            
+            translate([backDims.x - bezelWidth.x/2, backDims.y - wallThickness, 0])
+            hanger();
+        }
+        
+        if(addHangersBottom) {
+            translate([bezelWidth.x/2, wallThickness, 0])
+            rotate([0,0,180])
+            hanger();
+            
+            translate([backDims.x - bezelWidth.x/2, wallThickness, 0])
+            rotate([0,0,180])
+            hanger();
+        }
     }
 }
 
