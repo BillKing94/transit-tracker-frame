@@ -576,6 +576,7 @@ module hanger() {
     linear_extrude(hangerDepth - hangerLipThickness)
     teardrop(hangerRadiusTop, hangerRadiusBottom, hangerHeight);
     
+    translate([0, -hangerLip, 0])
     linear_extrude(hangerDepth)
     teardrop(hangerRadiusTop - hangerLip, hangerRadiusBottom - hangerLip, hangerHeight - hangerLipThickness);
 }
